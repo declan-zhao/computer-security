@@ -1,0 +1,67 @@
+/********************************************************************
+ * Author:  Carlos Moreno
+ * Created: 2019-06
+ *
+ * Description:
+ *
+ *      Just annotations / sketch code for handling the required
+ *      hex encoding / decoding in the assignment (question 1)
+ *
+ ********************************************************************/
+
+Encoding:
+
+- The C way (which is also valid C++ code):
+
+    Using sprintf with format specifier %02x or %02X (try it to figure out
+    the difference between both).  Notice, this works on a character by
+    character basis --- the x format specifier hex-encodes an integer value!
+    (giving it each character at a time, you're passing the integer value
+    corresponding to the ASCII code of the character --- in the more
+    general case, you're passing each byte of the representation of the
+    character in whatever encoding we may be using.  In our case, we do
+    not really deviate from ASCII, even if everything uses UTF-8)
+
+
+- The C++ way:
+
+    Using output stringstreams, with the hex IO manipulator.  Also has to
+    be done character by character:
+
+    char ch = 'a';
+    ostringstream s;
+    s1 << hex << ch;
+    cout << s1.str() << endl;
+        // Watch out!  The above just outputs a  (why?)
+
+    s2 << hex << static_cast<int>(ch);
+    cout << s2.str() << endl;
+        // This one outputs 61 (the ASCII code of a, in hexadecimal)
+
+- The "by hand" way:
+
+    You can always use an array of hex digits, and work with it:
+
+    char hex_digits[16] = "0123456789abcdef";
+    cout << hex_digits[ch / 16] << hex_digits[ch % 16] << endl;
+
+
+Hex-decoding can be a bit trickier to code.  For each character in the
+hex-encoded string; you want to obtain the numeric value of its ASCII
+code (they're all ASCII, even if we're using UTF-8 encoding).  Since
+ASCII codes are consecutive for consecutive numeric digits or consecutive
+letters, you simply subtract the ASCII code of the first character:
+
+For digits:  ch - '0'
+For letters: ch - 'a' + 10   (why do we add 10?)
+
+Careful: that assumes that the hex-encoded string is written in
+lowercase;  preferably, just convert to lowercase (or to uppercase
+and you subtract 'A', as you prefer)
+
+Then, for every two hex digits, the numeric value of the represented
+byte is just 16 * MSvalue + LSvalue
+
+
+Also, don't forget to validate that you always have an even number of
+digits; for each character, just subtract '0' if it is a digit

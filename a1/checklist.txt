@@ -1,0 +1,17 @@
+
+- In Q1, pay close attention to what's hex-encoded and what isn't.
+  There are some opportunities for skipping the hex-decoding (since
+  you can do the comparisons on the hex-encoded strings);  but there
+  are some instances where you must be working with the "raw" data.
+
+- For Q2, I will soon run the server, and will post some additional
+  information  (notes on confidence intervals --- should be a review
+  of your ECE-316 probability and statistics course).
+
+- Q2 must run on ECELinux  (it will be graded on that machine)
+  You may still test it on your own computer.
+
+  If testing on ECELinux with your own server, please choose some
+  "random" por number (has to be above 1024) --- I will be running
+  the "reference" server on port 10458, and you want to choose
+  some port that is not in use by some other student.
