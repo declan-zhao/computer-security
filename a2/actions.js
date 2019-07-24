@@ -147,25 +147,24 @@ function signup(userInput, passInput, passInput2, emailInput) {
     password2 = passInput2.value,
     email = emailInput.value;
 
-  // do any preprocessing on the user input here before sending to the server
+  // checking is done with HTML and functions at the end of the file
+  // hash password with username
+  digestMessage(username + password).then(digestValue => {
+    password = bufferToHexString(digestValue);
 
-  // send the signup form to the server
-  serverRequest("signup", // resource to call
-    {
+    // send the signup form to the server
+    serverRequest("signup", {
       "username": username,
       "password": password,
       "email": email
-    } // this should be populated with needed parameters
-  ).then(function (result) {
-    // if everything was good
-    if (result.response.ok) {
-      // do any work needed if the signup request succeeded
-
-      // go to the login page
-      showContent("login");
-    }
-    // show the status message from the server
-    serverStatus(result);
+    }).then(result => {
+      if (result.response.ok) {
+        // go to the login page
+        showContent("login");
+      }
+      // show the status message from the server
+      serverStatus(result);
+    });
   });
 }
 
@@ -327,4 +326,9 @@ function validateSignupInfo() {
   }
 
   return true;
+}
+
+function digestMessage(message) {
+  const data = utf8ToUint8Array(message);
+  return window.crypto.subtle.digest('SHA-256', data);
 }
