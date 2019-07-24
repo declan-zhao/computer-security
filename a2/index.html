@@ -48,25 +48,32 @@
         <form>
           <div class="field">
             <label for="username">Username: </label>
-            <input type="text" placeholder="Desired Username" name="username" required />
+            <input type="text" placeholder="Desired Username" name="username" required
+              pattern="^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$"
+              title="You can use letters, numbers, - and _. Must start with a letter or a number, and at least 3 and at most 20 characters."
+              minlength="3" maxlength="20" />
           </div>
 
           <div class="field">
             <label for="password">Password: </label>
-            <input type="password" placeholder="Desired Password" name="password" required />
+            <input type="password" placeholder="Desired Password" name="password" required
+              pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,16}"
+              title="Must contain at least one number, one uppercase and one lowercase letter, and at least 6 and at most 16 characters."
+              minlength="6" maxlength="16" />
           </div>
 
           <div class="field">
             <label for="password2">Repeat Password: </label>
-            <input type="password" placeholder="Desired Password" name="password2" required />
+            <input type="password" placeholder="Desired Password" name="password2" required minlength="6" maxlength="16"
+              onkeyup="validatePasswordsMatching();" />
           </div>
 
           <div class="field">
             <label for="email">Email Address: </label>
-            <input type="text" placeholder="Your Email Address" name="email" required />
+            <input type="text" placeholder="Your Email Address" name="email" required onkeyup="validateEmail();" />
           </div>
 
-          <button type="submit">Sign up</button>
+          <button type="submit" onclick="validateSignupInfo();">Sign up</button>
         </form>
       </div>
 

@@ -245,3 +245,86 @@ function logout() {
     serverStatus(result);
   });
 }
+
+/**
+ * Called when the value in password2 is changed.
+ */
+function validatePasswordsMatching() {
+  const password = document.querySelector("#signup form .field input[name=password]");
+  const password2 = document.querySelector("#signup form .field input[name=password2]");
+
+  if (password2.value === "") {
+    password2.setCustomValidity("Please confirm password!");
+  } else if (password.value !== password2.value) {
+    password2.setCustomValidity("Passwords do not match!");
+  } else {
+    password2.setCustomValidity("");
+  }
+}
+
+/**
+ * Called when the value in email is changed.
+ */
+function validateEmail() {
+  const email = document.querySelector("#signup form .field input[name=email]");
+  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+
+  if (email.value === "") {
+    email.setCustomValidity("Please enter email!");
+  } else if (!emailRegex.test(email.value)) {
+    email.setCustomValidity("Must be a valid email address!");
+  } else {
+    email.setCustomValidity("");
+  }
+}
+
+/**
+ * Called when the sign up submit button is clicked.
+ */
+function validateSignupInfo() {
+  const username = document.querySelector("#signup form .field input[name=username]");
+  const password = document.querySelector("#signup form .field input[name=password]");
+  const password2 = document.querySelector("#signup form .field input[name=password2]");
+  const email = document.querySelector("#signup form .field input[name=email]");
+  const usernameRegex = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/);
+  const passwordRegex = new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,16}/);
+  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+
+  if (!usernameRegex.test(username.value)) {
+    console.log("Username is invalid! You can use letters, numbers, - and _. Must start with a letter or a number, and at least 3 and at most 20 characters.");
+
+    return false;
+  }
+
+  if (!passwordRegex.test(password.value)) {
+    console.log("Password is invalid! Must contain at least one number, one uppercase and one lowercase letter, and at least 6 and at most 16 characters.");
+
+    return false;
+  }
+
+  if (password2.value === "") {
+    console.log("Please confirm password!");
+
+    return false;
+  }
+
+  if (password.value !== password2.value) {
+    console.log("Passwords do not match!");
+
+    return false;
+  }
+
+  if (email.value === "") {
+    console.log("Please enter email!");
+
+    return false;
+  }
+
+  if (!emailRegex.test(email.value)) {
+    console.log("Must be a valid email address!");
+
+    return false;
+  }
+
+  return true;
+}
