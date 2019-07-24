@@ -118,7 +118,7 @@
  * HTTP response codes and a failure message.  Returning false will prevent the requested
  * resource from being called.
  */
-function preflight(&$request, &$response, &$db)
+function preflight(&$request, &$response, &$db, &$pdo)
 {
   $response->set_http_code(200);
   $response->success("Request OK");
@@ -132,11 +132,52 @@ function preflight(&$request, &$response, &$db)
  * The username and email must be unique and valid, and the password must be valid.
  * Note that it is fine to rely on database constraints.
  */
-function signup(&$request, &$response, &$db)
+function signup(&$request, &$response, &$db, &$pdo)
 {
   $username = $request->param("username"); // The requested username from the client
   $password = $request->param("password"); // The requested password from the client
   $email    = $request->param("email");    // The requested email address from the client
+
+  // Check if params are valid
+  if (preg_match("/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/", $username) === 0) {
+    $response->set_http_code(400);
+    $response->failure("Failed to create account.");
+    log_to_console("Username is invalid!");
+
+    return false;
+  } else if (preg_match("/^[A-Fa-f0-9]{64}$/", $password) === 0) {
+    $response->set_http_code(400);
+    $response->failure("Failed to create account.");
+    log_to_console("Password is invalid!");
+
+    return false;
+  } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    $response->set_http_code(400);
+    $response->failure("Failed to create account.");
+    log_to_console("Email is invalid!");
+
+    return false;
+  }
+
+  // Convert to lower case
+  $username = strtolower($username);
+  $password = strtolower($password);
+  $email = strtolower($email);
+
+  // Hash password with salt
+  $salt = md5(rand()) . md5(rand());
+  $password = hash('sha256', $password .= $salt);
+
+  // generate timestamp
+  $modified = new DateTime();
+  $modified = $modified->format(DateTimeInterface::ISO8601);
+
+  if (!$db->create_user_transaction($username, $password, $email, $modified, $salt, $db, $pdo)) {
+    $response->set_http_code(400);
+    $response->failure("Failed to create account.");
+
+    return false;
+  }
 
   // Respond with a message of success.
   $response->set_http_code(201); // Created
@@ -153,7 +194,7 @@ function signup(&$request, &$response, &$db)
  * a log in attempt for the given user.
  * Care should be taken not to leak information!
  */
-function identify(&$request, &$response, &$db)
+function identify(&$request, &$response, &$db, &$pdo)
 {
   $username = $request->param("username"); // The username
 
@@ -169,7 +210,7 @@ function identify(&$request, &$response, &$db)
  * On success, creates a new session.
  * On failure, fails to create a new session and responds appropriately.
  */
-function login(&$request, &$response, &$db)
+function login(&$request, &$response, &$db, &$pdo)
 {
   $username = $request->param("username"); // The username with which to log in
   $password = $request->param("password"); // The password with which to log in
@@ -186,7 +227,7 @@ function login(&$request, &$response, &$db)
  * If the session is valid, it should return the data.
  * If the session is invalid, it should return 401 unauthorized.
  */
-function sites(&$request, &$response, &$db)
+function sites(&$request, &$response, &$db, &$pdo)
 {
   $sites = array();
 
@@ -203,7 +244,7 @@ function sites(&$request, &$response, &$db)
  * If the session is valid, it should save the data, overwriting the site if it exists.
  * If the session is invalid, it should return 401 unauthorized.
  */
-function save(&$request, &$response, &$db)
+function save(&$request, &$response, &$db, &$pdo)
 {
   $site       = $request->param("site");
   $siteuser   = $request->param("siteuser");
@@ -221,7 +262,7 @@ function save(&$request, &$response, &$db)
  * If the session is valid and the site exists, return the data.
  * If the session is invalid return 401, if the site doesn't exist return 404.
  */
-function load(&$request, &$response, &$db)
+function load(&$request, &$response, &$db, &$pdo)
 {
   $site = $request->param("site");
 
@@ -238,7 +279,7 @@ function load(&$request, &$response, &$db)
  * Logs out of the current session.
  * Delete the associated session if one exists.
  */
-function logout(&$request, &$response, &$db)
+function logout(&$request, &$response, &$db, &$pdo)
 {
   $response->set_http_code(200);
   $response->success("Successfully logged out.");

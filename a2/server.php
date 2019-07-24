@@ -25,7 +25,65 @@ $decoded_post_body = json_decode(file_get_contents('php://input'), CREATE_ASSOC_
 // Just get the names of GET params, not the values
 $url_params = array_keys($_GET);
 // Get a PDO database connection that  will throw exceptions on failures
-$db = new PDO("sqlite:passwordsafe.db", NULL, NULL, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+$pdo = new PDO("sqlite:passwordsafe.db", NULL, NULL, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false));
+
+// https://www.php.net/manual/en/language.types.object.php#114442
+class stdObject
+{
+  public function __construct(array $arguments = array())
+  {
+    if (!empty($arguments)) {
+      foreach ($arguments as $property => $argument) {
+        $this->{$property} = $argument;
+      }
+    }
+  }
+
+  public function __call($method, $arguments)
+  {
+    $arguments = array_merge(array("stdObject" => $this), $arguments);
+
+    if (isset($this->{$method}) && is_callable($this->{$method})) {
+      return call_user_func_array($this->{$method}, $arguments);
+    } else {
+      throw new Exception("Fatal error: Call to undefined method stdObject::{$method}()");
+    }
+  }
+}
+
+// create PDO prepared statements
+$db = new stdObject();
+
+// signup
+$db->create_user = $pdo->prepare("INSERT INTO user (username, passwd, email, valid, modified) VALUES (:username, :passwd, :email, TRUE, :modified)");
+$db->create_login_info = $pdo->prepare("INSERT INTO user_login (username, salt, challenge, expires) VALUES (:username, :salt, NULL, NULL)");
+
+$db->create_user_transaction = function ($stdObject, $username, $passwd, $email, $modified, $salt, $db, $pdo) {
+  try {
+    $pdo->beginTransaction();
+
+    $db->create_user->execute(array(
+      'username' => $pdo->quote($username),
+      'passwd' => $pdo->quote($passwd),
+      'email' => $pdo->quote($email),
+      'modified' => $pdo->quote($modified)
+    ));
+
+    $db->create_login_info->execute(array(
+      'username' => $pdo->quote($username),
+      'salt' => $pdo->quote($salt)
+    ));
+
+    $pdo->commit();
+
+    return true;
+  } catch (Exception $e) {
+    $pdo->rollback();
+    log_to_console($e->getMessage());
+
+    return false;
+  }
+};
 
 $request = new Request($decoded_post_body);
 $response = null;
@@ -35,41 +93,41 @@ $response = null;
 if ($request_method == "POST") {
   if (in_array("preflight", $url_params, STRICT_TYPES)) {
     $response = new Response("preflight");
-    preflight($request, $response, $db);
+    preflight($request, $response, $db, $pdo);
   } else if (in_array("signup", $url_params, STRICT_TYPES)) {
     $response = new Response("signup");
-    if (preflight($request, $response, $db)) {
-      signup($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      signup($request, $response, $db, $pdo);
     }
   } else if (in_array("identify", $url_params, STRICT_TYPES)) {
     $response = new Response("identify");
-    if (preflight($request, $response, $db)) {
-      identify($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      identify($request, $response, $db, $pdo);
     }
   } else if (in_array("login", $url_params, STRICT_TYPES)) {
     $response = new Response("login");
-    if (preflight($request, $response, $db)) {
-      login($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      login($request, $response, $db, $pdo);
     }
   } else if (in_array("sites", $url_params, STRICT_TYPES)) {
     $response = new Response("sites");
-    if (preflight($request, $response, $db)) {
-      sites($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      sites($request, $response, $db, $pdo);
     }
   } else if (in_array("save", $url_params, STRICT_TYPES)) {
     $response = new Response("save");
-    if (preflight($request, $response, $db)) {
-      save($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      save($request, $response, $db, $pdo);
     }
   } else if (in_array("load", $url_params, STRICT_TYPES)) {
     $response = new Response("load");
-    if (preflight($request, $response, $db)) {
-      load($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      load($request, $response, $db, $pdo);
     }
   } else if (in_array("logout", $url_params, STRICT_TYPES)) {
     $response = new Response("logout");
-    if (preflight($request, $response, $db)) {
-      logout($request, $response, $db);
+    if (preflight($request, $response, $db, $pdo)) {
+      logout($request, $response, $db, $pdo);
     }
   } else {
     $response = new Response("default");
