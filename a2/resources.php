@@ -328,10 +328,67 @@ function login(&$request, &$response, &$db, &$pdo)
 {
   $username = $request->param("username"); // The username with which to log in
   $password = $request->param("password"); // The password with which to log in
+  $username = strtolower($username);
+  $password = strtolower($password);
+
+  $get_user_info_by_username = $db->get_user_info_by_username;
+  $get_user_info_by_username->execute(array('username' => $username));
+  $user = $get_user_info_by_username->fetch();
+
+  // Check if user exists
+  if ($user) {
+    // Check if user is valid
+    if ($user["valid"] === "1") {
+      // Check if challenge exists and is not expired
+      $challenge = $user["challenge"];
+
+      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user["expires"])) {
+        $password_challenge = hash('sha256', $user["passwd"] . $challenge);
+
+        // Check if password is correct
+        if ($password === $password_challenge) {
+          $sessionid = $request->cookie("sessionid");
+          $expires = new DateTime("+5 minutes");
+          $expires = $expires->format(DateTimeInterface::ISO8601);
+
+          $db->create_or_update_user_session_info->execute(array(
+            'sessionid' => $sessionid,
+            'username' => $username,
+            'expires' => $expires
+          ));
+        } else {
+          $response->set_http_code(400);
+          $response->failure("Failed to log in.");
+          log_to_console("Password is incorrect.");
+
+          return false;
+        }
+      } else {
+        $response->set_http_code(400);
+        $response->failure("Failed to log in.");
+        log_to_console("Challenge is expired.");
+
+        return false;
+      }
+    } else {
+      $response->set_http_code(400);
+      $response->failure("Failed to log in.");
+      log_to_console("User is not valid.");
+
+      return false;
+    }
+  } else {
+    $response->set_http_code(400);
+    $response->failure("Failed to log in.");
+    log_to_console("User does not exist.");
+
+    return false;
+  }
 
   $response->set_http_code(200); // OK
   $response->success("Successfully logged in.");
-  log_to_console("Session created.");
+  log_to_console("User session created.");
+
   return true;
 }
 

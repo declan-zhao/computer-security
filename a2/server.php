@@ -94,6 +94,10 @@ $db->create_user_transaction = function ($stdObject, $username, $passwd, $email,
 $db->get_login_info_by_username = $pdo->prepare("SELECT valid, salt, challenge, expires FROM user LEFT OUTER JOIN user_login USING (username) WHERE username = :username");
 $db->update_login_info_by_username = $pdo->prepare("UPDATE user_login SET challenge = :challenge, expires = :expires WHERE username = :username");
 
+// login
+$db->get_user_info_by_username = $pdo->prepare("SELECT passwd, valid, challenge, expires FROM user LEFT OUTER JOIN user_login USING (username) WHERE username = :username");
+$db->create_or_update_user_session_info = $pdo->prepare("INSERT INTO user_session (sessionid, username, expires) VALUES (:sessionid, :username, :expires) ON CONFLICT (username) DO UPDATE SET sessionid = :sessionid, expires = :expires");
+
 $request = new Request($decoded_post_body);
 $response = null;
 
