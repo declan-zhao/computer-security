@@ -120,6 +120,96 @@
  */
 function preflight(&$request, &$response, &$db, &$pdo)
 {
+  $is_new_sessionid_required = false;
+  $sessionid = $request->cookie("sessionid");
+
+  // Check if sessionid is in cookies
+  if ($sessionid) {
+    $get_web_session_info_by_sessionid = $db->get_web_session_info_by_sessionid;
+    $get_web_session_info_by_sessionid->execute(array('sessionid' => $sessionid));
+    $web_session = $get_web_session_info_by_sessionid->fetch();
+
+    // Check if sessionid exists in db and is not expired
+    if ($web_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $web_session["expires"])) {
+      $csrf_token = $request->token("csrf_token");
+
+      // Check if csrf_token exists and if it is valid, update expires
+      if ($csrf_token && $csrf_token === $web_session["metadata"]) {
+        $expires = new DateTime("+30 minutes");
+        $expires = $expires->format(DateTimeInterface::ISO8601);
+
+        $result = $db->update_web_session_info_by_sessionid->execute(array(
+          'expires' => $expires,
+          'sessionid' => $sessionid
+        ));
+
+        if (!$result) {
+          $response->set_http_code(500);
+          $response->failure("Failed to load.");
+          log_to_console("Cannot update web session in database.");
+
+          return false;
+        }
+
+        log_to_console("Updated web session!");
+      } else {
+        // This is possible CSRF, void session, reject request and log client IP
+        $expires = new DateTime("-30 minutes");
+        $expires = $expires->format(DateTimeInterface::ISO8601);
+
+        $result = $db->update_web_session_info_by_sessionid->execute(array(
+          'expires' => $expires,
+          'sessionid' => $sessionid
+        ));
+
+        if (!$result) {
+          $response->set_http_code(500);
+          $response->failure("Failed to load.");
+          log_to_console("Cannot void web session in database.");
+
+          return false;
+        }
+
+        $response->set_http_code(403);
+        $response->failure("Request Failed");
+        log_to_console("Possible CSRF from " . $request->client_ip() . "!");
+
+        return false;
+      }
+    } else {
+      $is_new_sessionid_required = true;
+    }
+  } else {
+    $is_new_sessionid_required = true;
+  }
+
+  if ($is_new_sessionid_required) {
+    // Create new sessionid and csrf_token
+    $sessionid = trim(get_GUID(), '{}');
+    $expires = new DateTime("+30 minutes");
+    $expires = $expires->format(DateTimeInterface::ISO8601);
+    $csrf_token = trim(get_GUID(), '{}');
+
+    $result = $db->create_web_session_info->execute(array(
+      'sessionid' => $sessionid,
+      'expires' => $expires,
+      'metadata' => $csrf_token
+    ));
+
+    if (!$result) {
+      $response->set_http_code(500);
+      $response->failure("Failed to load.");
+      log_to_console("Cannot create web session in database.");
+
+      return false;
+    }
+
+    $response->add_cookie("sessionid", $sessionid);
+    $response->set_token("csrf_token", $csrf_token);
+
+    log_to_console("New web session created.");
+  }
+
   $response->set_http_code(200);
   $response->success("Request OK");
   log_to_console("OK");
@@ -342,4 +432,19 @@ function logout(&$request, &$response, &$db, &$pdo)
   log_to_console("Logged out");
 
   return true;
+}
+
+// http://guid.us/GUID/PHP
+function get_GUID()
+{
+  $charid = strtoupper(md5(uniqid(rand(), true)));
+  $hyphen = chr(45); // "-"
+  $uuid = chr(123) // "{"
+    . substr($charid, 0, 8) . $hyphen
+    . substr($charid, 8, 4) . $hyphen
+    . substr($charid, 12, 4) . $hyphen
+    . substr($charid, 16, 4) . $hyphen
+    . substr($charid, 20, 12)
+    . chr(125); // "}"
+  return $uuid;
 }

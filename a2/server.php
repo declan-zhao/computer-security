@@ -54,6 +54,11 @@ class stdObject
 // create PDO prepared statements
 $db = new stdObject();
 
+// preflight
+$db->get_web_session_info_by_sessionid = $pdo->prepare("SELECT * FROM web_session WHERE sessionid = :sessionid");
+$db->update_web_session_info_by_sessionid = $pdo->prepare("UPDATE web_session SET expires = :expires WHERE sessionid = :sessionid");
+$db->create_web_session_info = $pdo->prepare("INSERT INTO web_session (sessionid, expires, metadata) VALUES (:sessionid, :expires, :metadata)");
+
 // signup
 $db->create_user = $pdo->prepare("INSERT INTO user (username, passwd, email, valid, modified) VALUES (:username, :passwd, :email, TRUE, :modified)");
 $db->create_login_info = $pdo->prepare("INSERT INTO user_login (username, salt, challenge, expires) VALUES (:username, :salt, NULL, NULL)");
