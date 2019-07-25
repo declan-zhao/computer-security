@@ -399,14 +399,26 @@ function login(&$request, &$response, &$db, &$pdo)
  */
 function sites(&$request, &$response, &$db, &$pdo)
 {
-  $sites = array();
+  $username = get_authenticated_user($request, $response, $db);
 
-  $response->set_data("sites", $sites); // return the sites array to the client
-  $response->set_http_code(200);
-  $response->success("Sites with recorded passwords.");
-  log_to_console("Found and returned sites");
+  if ($username) {
+    $get_sites_data_by_username = $db->get_sites_data_by_username;
+    $get_sites_data_by_username->execute(array('username' => $username));
+    $sites_data = $get_sites_data_by_username->fetchAll();
 
-  return true;
+    $get_site_attribute = function ($site_data) {
+      return $site_data["site"];
+    };
+
+    $sites = array_map($get_site_attribute, $sites_data);
+
+    $response->set_data("sites", $sites);
+    $response->set_http_code(200);
+    $response->success("Sites with recorded passwords.");
+    log_to_console("Found and returned sites");
+
+    return true;
+  }
 }
 
 /**

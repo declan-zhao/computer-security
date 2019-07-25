@@ -101,6 +101,9 @@ $db->create_or_update_user_session_info = $pdo->prepare("INSERT INTO user_sessio
 // get_authenticated_user
 $db->get_user_session_info_by_sessionid = $pdo->prepare("SELECT * FROM user_session WHERE sessionid = :sessionid");
 
+// sites
+$db->get_sites_data_by_username = $pdo->prepare("SELECT site FROM user_safe WHERE username = :username");
+
 $request = new Request($decoded_post_body);
 $response = null;
 
