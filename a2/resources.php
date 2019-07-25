@@ -197,6 +197,62 @@ function signup(&$request, &$response, &$db, &$pdo)
 function identify(&$request, &$response, &$db, &$pdo)
 {
   $username = $request->param("username"); // The username
+  $username = strtolower($username);
+
+  $get_login_info_by_username = $db->get_login_info_by_username;
+  $get_login_info_by_username->execute(array('username' => $username));
+  $user = $get_login_info_by_username->fetch();
+
+  // Check if user exists
+  if ($user) {
+    // Check if user is valid
+    if ($user["valid"] === "1") {
+      // Check if challenge exists and is not expired
+      $challenge = $user["challenge"];
+
+      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user["expires"])) {
+        log_to_console("Used existing challenge!");
+      } else {
+        // Generate new challenge, update expires
+        $challenge = md5(rand()) . md5(rand());
+        $expires = new DateTime("+2 minutes");
+        $expires = $expires->format(DateTimeInterface::ISO8601);
+
+        $result = $db->update_login_info_by_username->execute(array(
+          'challenge' => $challenge,
+          'expires' => $expires,
+          'username' => $username
+        ));
+
+        if (!$result) {
+          $response->set_http_code(500);
+          $response->failure("Failed to identify user.");
+          log_to_console("Cannot update challenge in database.");
+
+          return false;
+        }
+
+        log_to_console("Updated challenge!");
+      }
+
+      $salt = $user["salt"];
+      // Set data
+      $response->set_data("salt", $salt);
+      $response->set_data("challenge", $challenge);
+    } else {
+      $response->set_http_code(400);
+      $response->failure("Failed to identify user.");
+      log_to_console("User is not valid.");
+
+      return false;
+    }
+  } else {
+    $response->set_http_code(400);
+    $response->failure("Failed to identify user.");
+    log_to_console("User does not exist.");
+
+    return false;
+  }
 
   $response->set_http_code(200);
   $response->success("Successfully identified user.");

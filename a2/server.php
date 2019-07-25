@@ -63,15 +63,15 @@ $db->create_user_transaction = function ($stdObject, $username, $passwd, $email,
     $pdo->beginTransaction();
 
     $db->create_user->execute(array(
-      'username' => $pdo->quote($username),
-      'passwd' => $pdo->quote($passwd),
-      'email' => $pdo->quote($email),
-      'modified' => $pdo->quote($modified)
+      'username' => $username,
+      'passwd' => $passwd,
+      'email' => $email,
+      'modified' => $modified
     ));
 
     $db->create_login_info->execute(array(
-      'username' => $pdo->quote($username),
-      'salt' => $pdo->quote($salt)
+      'username' => $username,
+      'salt' => $salt
     ));
 
     $pdo->commit();
@@ -84,6 +84,10 @@ $db->create_user_transaction = function ($stdObject, $username, $passwd, $email,
     return false;
   }
 };
+
+// identify
+$db->get_login_info_by_username = $pdo->prepare("SELECT valid, salt, challenge, expires FROM user LEFT OUTER JOIN user_login USING (username) WHERE username = :username");
+$db->update_login_info_by_username = $pdo->prepare("UPDATE user_login SET challenge = :challenge, expires = :expires WHERE username = :username");
 
 $request = new Request($decoded_post_body);
 $response = null;
