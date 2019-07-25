@@ -138,18 +138,10 @@ function preflight(&$request, &$response, &$db, &$pdo)
         $expires = new DateTime("+30 minutes");
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
-        $result = $db->update_web_session_info_by_sessionid->execute(array(
+        $db->update_web_session_info_by_sessionid->execute(array(
           'expires' => $expires,
           'sessionid' => $sessionid
         ));
-
-        if (!$result) {
-          $response->set_http_code(500);
-          $response->failure("Failed to load.");
-          log_to_console("Cannot update web session in database.");
-
-          return false;
-        }
 
         log_to_console("Updated web session!");
       } else {
@@ -157,19 +149,12 @@ function preflight(&$request, &$response, &$db, &$pdo)
         $expires = new DateTime("-30 minutes");
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
-        $result = $db->update_web_session_info_by_sessionid->execute(array(
+        $db->update_web_session_info_by_sessionid->execute(array(
           'expires' => $expires,
           'sessionid' => $sessionid
         ));
 
-        if (!$result) {
-          $response->set_http_code(500);
-          $response->failure("Failed to load.");
-          log_to_console("Cannot void web session in database.");
-
-          return false;
-        }
-
+        $response->delete_cookie("sessionid");
         $response->set_http_code(403);
         $response->failure("Request Failed");
         log_to_console("Possible CSRF from " . $request->client_ip() . "!");
@@ -185,24 +170,16 @@ function preflight(&$request, &$response, &$db, &$pdo)
 
   if ($is_new_sessionid_required) {
     // Create new sessionid and csrf_token
-    $sessionid = trim(get_GUID(), '{}');
+    $sessionid = trim(get_guid(), '{}');
     $expires = new DateTime("+30 minutes");
     $expires = $expires->format(DateTimeInterface::ISO8601);
-    $csrf_token = trim(get_GUID(), '{}');
+    $csrf_token = trim(get_guid(), '{}');
 
-    $result = $db->create_web_session_info->execute(array(
+    $db->create_web_session_info->execute(array(
       'sessionid' => $sessionid,
       'expires' => $expires,
       'metadata' => $csrf_token
     ));
-
-    if (!$result) {
-      $response->set_http_code(500);
-      $response->failure("Failed to load.");
-      log_to_console("Cannot create web session in database.");
-
-      return false;
-    }
 
     $response->add_cookie("sessionid", $sessionid);
     $response->set_token("csrf_token", $csrf_token);
@@ -277,7 +254,6 @@ function signup(&$request, &$response, &$db, &$pdo)
   return true;
 }
 
-
 /**
  * Handles identification requests.
  * This resource should return any information the client will need to produce
@@ -308,19 +284,11 @@ function identify(&$request, &$response, &$db, &$pdo)
         $expires = new DateTime("+2 minutes");
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
-        $result = $db->update_login_info_by_username->execute(array(
+        $db->update_login_info_by_username->execute(array(
           'challenge' => $challenge,
           'expires' => $expires,
           'username' => $username
         ));
-
-        if (!$result) {
-          $response->set_http_code(500);
-          $response->failure("Failed to identify user.");
-          log_to_console("Cannot update challenge in database.");
-
-          return false;
-        }
 
         log_to_console("Updated challenge!");
       }
@@ -366,7 +334,6 @@ function login(&$request, &$response, &$db, &$pdo)
   log_to_console("Session created.");
   return true;
 }
-
 
 /**
  * Returns the sites for which a password is already stored.
@@ -435,7 +402,7 @@ function logout(&$request, &$response, &$db, &$pdo)
 }
 
 // http://guid.us/GUID/PHP
-function get_GUID()
+function get_guid()
 {
   $charid = strtoupper(md5(uniqid(rand(), true)));
   $hyphen = chr(45); // "-"
