@@ -88,7 +88,7 @@
  * This is an async function that should return the username and password to send
  * to the server for login credentials.
  */
-async function credentials(username, password) {
+async function credentials(username) {
   var idResult;
 
   // get any information needed to log in
@@ -107,34 +107,37 @@ async function credentials(username, password) {
 /**
  * Called when the user submits the log-in form.
  */
-function login(userInput, passInput) {
+async function login(userInput, passInput) {
   // get the form fields
   var username = userInput.value,
     password = passInput.value;
 
-  credentials(username, password).then(function (idJson) {
-    // do any needed work with the credentials
+  const idJson = await credentials(username);
 
-    // Send a login request to the server.
-    serverRequest("login", // resource to call
-      {
-        "username": username,
-        "password": password
-      } // this should be populated with needed parameters
-    ).then(function (result) {
-      // If the login was successful, show the dashboard.
-      if (result.response.ok) {
-        // do any other work needed after successful login here
+  if (idJson === 0) {
+    return;
+  }
 
-        showContent("dashboard");
+  // Hash password
+  let hashedPassword = await hashMessage(username + password);
+  hashedPassword = await hashMessage(hashedPassword + idJson['salt']);
+  hashedPassword = await hashMessage(hashedPassword + idJson['challenge']);
 
-      } else {
-        // If the login failed, show the login page with an error message.
-        serverStatus(result);
-      }
-    });
-
+  // Send a login request to the server.
+  const result = await serverRequest("login", {
+    "username": username,
+    "password": hashedPassword
   });
+
+  // If the login was successful, show the dashboard.
+  if (result.response.ok) {
+    sessionStorage.setItem('encryption_key', password);
+
+    showContent("dashboard");
+  } else {
+    // If the login failed, show the login page with an error message.
+    serverStatus(result);
+  }
 }
 
 /**
