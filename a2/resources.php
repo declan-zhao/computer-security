@@ -165,7 +165,7 @@ function signup(&$request, &$response, &$db, &$pdo)
   $email = strtolower($email);
 
   // Hash password with salt
-  $salt = md5(rand()) . md5(rand());
+  $salt = md5(uniqid(rand())) . md5(uniqid(rand()));
   $password = hash('sha256', $password .= $salt);
 
   // generate timestamp
@@ -214,7 +214,7 @@ function identify(&$request, &$response, &$db, &$pdo)
         log_to_console("Used existing challenge!");
       } else {
         // Generate new challenge, update expires
-        $challenge = md5(rand()) . md5(rand());
+        $challenge = md5(uniqid(rand())) . md5(uniqid(rand()));
         $expires = new DateTime("+2 minutes");
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
