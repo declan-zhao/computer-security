@@ -472,3 +472,31 @@ function get_guid()
     . chr(125); // "}"
   return $uuid;
 }
+
+function get_authenticated_user(&$request, &$response, &$db)
+{
+  $sessionid = $request->cookie("sessionid");
+  $get_user_session_info_by_sessionid = $db->get_user_session_info_by_sessionid;
+  $get_user_session_info_by_sessionid->execute(array('sessionid' => $sessionid));
+  $user_session = $get_user_session_info_by_sessionid->fetch();
+
+  if ($user_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user_session["expires"])) {
+    $username = $user_session["username"];
+    $expires = new DateTime("+5 minutes");
+    $expires = $expires->format(DateTimeInterface::ISO8601);
+
+    $db->create_or_update_user_session_info->execute(array(
+      'sessionid' => $sessionid,
+      'username' => $username,
+      'expires' => $expires
+    ));
+
+    return $username;
+  } else {
+    $response->set_http_code(401);
+    $response->failure("Please log in first.");
+    log_to_console("Unauthorized access!");
+
+    return false;
+  }
+}
