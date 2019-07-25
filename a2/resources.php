@@ -208,19 +208,19 @@ function signup(&$request, &$response, &$db, &$pdo)
   // Check if params are valid
   if (preg_match("/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/", $username) === 0) {
     $response->set_http_code(400);
-    $response->failure("Failed to create account.");
+    $response->failure("Username is invalid!");
     log_to_console("Username is invalid!");
 
     return false;
   } else if (preg_match("/^[A-Fa-f0-9]{64}$/", $password) === 0) {
     $response->set_http_code(400);
-    $response->failure("Failed to create account.");
+    $response->failure("Password is invalid!");
     log_to_console("Password is invalid!");
 
     return false;
   } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $response->set_http_code(400);
-    $response->failure("Failed to create account.");
+    $response->failure("Email is invalid!");
     log_to_console("Email is invalid!");
 
     return false;
