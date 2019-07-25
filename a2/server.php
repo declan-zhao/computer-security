@@ -63,7 +63,7 @@ $db->create_web_session_info = $pdo->prepare("INSERT INTO web_session (sessionid
 $db->create_user = $pdo->prepare("INSERT INTO user (username, passwd, email, valid, modified) VALUES (:username, :passwd, :email, TRUE, :modified)");
 $db->create_login_info = $pdo->prepare("INSERT INTO user_login (username, salt, challenge, expires) VALUES (:username, :salt, NULL, NULL)");
 
-$db->create_user_transaction = function ($stdObject, $username, $passwd, $email, $modified, $salt, $db, $pdo) {
+$db->create_user_transaction = function ($stdObject, $username, $passwd, $email, $modified, $salt, &$db, &$pdo) {
   try {
     $pdo->beginTransaction();
 
