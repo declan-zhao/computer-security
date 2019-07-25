@@ -131,7 +131,9 @@ async function login(userInput, passInput) {
 
   // If the login was successful, show the dashboard.
   if (result.response.ok) {
-    sessionStorage.setItem('encryption_key', password);
+    const encryptionKey = await hashMessage(password);
+
+    sessionStorage.setItem('encryption_key', encryptionKey);
 
     showContent("dashboard");
   } else {
