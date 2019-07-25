@@ -428,15 +428,32 @@ function sites(&$request, &$response, &$db, &$pdo)
  */
 function save(&$request, &$response, &$db, &$pdo)
 {
-  $site       = $request->param("site");
-  $siteuser   = $request->param("siteuser");
-  $sitepasswd = $request->param("sitepasswd");
+  $username = get_authenticated_user($request, $response, $db);
 
-  $response->set_http_code(200); // OK
-  $response->success("Save to safe succeeded.");
-  log_to_console("Successfully saved site data");
+  if ($username) {
+    $site       = trim($request->param("site"));
+    $siteuser   = trim($request->param("siteuser"));
+    $sitepasswd = trim($request->param("sitepasswd"));
+    $siteiv     = trim($request->param("siteiv"));
 
-  return true;
+    $modified = new DateTime();
+    $modified = $modified->format(DateTimeInterface::ISO8601);
+
+    $db->create_or_update_site_data->execute(array(
+      'username' => $username,
+      'site' => $site,
+      'siteuser' => $siteuser,
+      'sitepasswd' => $sitepasswd,
+      'siteiv' => $siteiv,
+      'modified' => $modified
+    ));
+
+    $response->set_http_code(200);
+    $response->success("Save to safe succeeded.");
+    log_to_console("Successfully saved site data");
+
+    return true;
+  }
 }
 
 /**
