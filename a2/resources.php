@@ -350,6 +350,14 @@ function login(&$request, &$response, &$db, &$pdo)
           $sessionid = $request->cookie("sessionid");
           $expires = new DateTime("+5 minutes");
           $expires = $expires->format(DateTimeInterface::ISO8601);
+          $csrf_token = trim(get_guid(), '{}');
+
+          $db->update_web_session_metadata_by_sessionid->execute(array(
+            'metadata' => $csrf_token,
+            'sessionid' => $sessionid,
+          ));
+
+          $response->set_token("csrf_token", $csrf_token);
 
           $db->create_or_update_user_session_info->execute(array(
             'sessionid' => $sessionid,

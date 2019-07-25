@@ -57,6 +57,7 @@ $db = new stdObject();
 // preflight
 $db->get_web_session_info_by_sessionid = $pdo->prepare("SELECT * FROM web_session WHERE sessionid = :sessionid");
 $db->update_web_session_info_by_sessionid = $pdo->prepare("UPDATE web_session SET expires = :expires WHERE sessionid = :sessionid");
+$db->update_web_session_metadata_by_sessionid = $pdo->prepare("UPDATE web_session SET metadata = :metadata WHERE sessionid = :sessionid");
 $db->create_web_session_info = $pdo->prepare("INSERT INTO web_session (sessionid, expires, metadata) VALUES (:sessionid, :expires, :metadata)");
 
 // signup
