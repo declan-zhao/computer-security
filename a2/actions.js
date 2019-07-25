@@ -140,7 +140,7 @@ function login(userInput, passInput) {
 /**
  * Called when the user submits the signup form.
  */
-function signup(userInput, passInput, passInput2, emailInput) {
+async function signup(userInput, passInput, passInput2, emailInput) {
   // get the form fields
   var username = userInput.value,
     password = passInput.value,
@@ -149,23 +149,21 @@ function signup(userInput, passInput, passInput2, emailInput) {
 
   // checking is done with HTML and functions at the end of the file
   // hash password with username
-  digestMessage(username + password).then(digestValue => {
-    password = bufferToHexString(digestValue);
+  password = await hashMessage(username + password);
 
-    // send the signup form to the server
-    serverRequest("signup", {
-      "username": username,
-      "password": password,
-      "email": email
-    }).then(result => {
-      if (result.response.ok) {
-        // go to the login page
-        showContent("login");
-      }
-      // show the status message from the server
-      serverStatus(result);
-    });
+  // send the signup form to the server
+  const result = await serverRequest("signup", {
+    "username": username,
+    "password": password,
+    "email": email
   });
+
+  if (result.response.ok) {
+    // go to the login page
+    showContent("login");
+  }
+  // show the status message from the server
+  serverStatus(result);
 }
 
 
@@ -328,7 +326,9 @@ function validateSignupInfo() {
   return true;
 }
 
-function digestMessage(message) {
+async function hashMessage(message) {
   const data = utf8ToUint8Array(message);
-  return window.crypto.subtle.digest('SHA-256', data);
+  const digestValue = await window.crypto.subtle.digest('SHA-256', data);
+
+  return bufferToHexString(digestValue);
 }
