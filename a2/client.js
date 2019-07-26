@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 /*******************************************************************
  * This file should not be modified by students!
  * It provides boilerplate for application functionality and some
  * utility functions.
  *******************************************************************/
-var currentPage = "default";
+var currentPage = 'default';
 
 
 /*******************************************************************
@@ -18,16 +18,16 @@ var currentPage = "default";
  * This function returns a promise for the response and json objects.
  */
 async function serverRequest(resource, data) {
-  data["tokens"] = getTokens();
-  var response = await fetch("server.php?" + resource, {
-    method: "POST",
-    cache: "no-cache",
-    credentials: "same-origin",
-    redirect: "error",
+  data['tokens'] = getTokens();
+  var response = await fetch('server.php?' + resource, {
+    method: 'POST',
+    cache: 'no-cache',
+    credentials: 'same-origin',
+    redirect: 'error',
     headers: {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     },
-    referrer: "no-referrer",
+    referrer: 'no-referrer',
     body: JSON.stringify(data)
   })
 
@@ -36,8 +36,8 @@ async function serverRequest(resource, data) {
 
   // it has to be done this way because json() consumes the body
   return {
-    "response": response,
-    "json": json
+    'response': response,
+    'json': json
   };
 }
 
@@ -46,30 +46,30 @@ async function serverRequest(resource, data) {
  */
 function showContent(page) {
   // First hide all the content divs
-  var contentDivs = document.querySelectorAll(".content");
+  var contentDivs = document.querySelectorAll('.content');
   for (let i = 0; i < contentDivs.length; i++) {
-    contentDivs[i].style.display = "none";
+    contentDivs[i].style.display = 'none';
   }
   // Remove any status messages
-  status("");
+  status('');
   // then show the signup content
-  document.getElementById(page).style.display = "block";
+  document.getElementById(page).style.display = 'block';
   // update the current page
   currentPage = page;
   // update the url
-  document.location.hash = "#" + page;
+  document.location.hash = '#' + page;
 }
 
 /**
  * This displays an error or status message on the page.
  */
 function status(message) {
-  var messageDialog = document.getElementById("message");
+  var messageDialog = document.getElementById('message');
   if (message) {
     messageDialog.textContent = message;
-    messageDialog.style.display = "block";
+    messageDialog.style.display = 'block';
   } else {
-    messageDialog.style.display = "none";
+    messageDialog.style.display = 'none';
   }
 }
 
@@ -79,10 +79,10 @@ function status(message) {
  * promise from a serverRequest.
  */
 function serverStatus(response) {
-  if ("success" in response.json) {
-    status(response.json["success"]);
-  } else if ("failure" in response.json) {
-    status(response.json["failure"]);
+  if ('success' in response.json) {
+    status(response.json['success']);
+  } else if ('failure' in response.json) {
+    status(response.json['failure']);
   }
 }
 
@@ -108,7 +108,7 @@ function hexStringToUint8Array(hexString) {
  * returns a string with its values decoded as UTF-8 characters.
  */
 function bufferToUtf8(buffer) {
-  return new TextDecoder("utf-8").decode(buffer);
+  return new TextDecoder('utf-8').decode(buffer);
 }
 
 /**
@@ -116,7 +116,7 @@ function bufferToUtf8(buffer) {
  * codes as its values.
  */
 function utf8ToUint8Array(utf8String) {
-  return new TextEncoder("utf-8").encode(utf8String);
+  return new TextEncoder('utf-8').encode(utf8String);
 }
 
 /*******************************************************************
@@ -125,9 +125,9 @@ function utf8ToUint8Array(utf8String) {
  *******************************************************************/
 
 const loader = {
-  "save": sites,
-  "load": sites,
-  "logout": logout
+  'save': sites,
+  'load': sites,
+  'logout': logout
 };
 
 /**
@@ -138,16 +138,16 @@ function init() {
   window.onhashchange = navigate;
 
   // set up the forms
-  var contentDivs = document.querySelectorAll(".content");
+  var contentDivs = document.querySelectorAll('.content');
   for (let i = 0; i < contentDivs.length; i++) {
     let content = contentDivs[i];
     // each content div has at most one form
-    let form = content.querySelector("form");
+    let form = content.querySelector('form');
     if (form) {
       // if there is a form, attach a handler
-      form.addEventListener("submit", function (event) {
+      form.addEventListener('submit', function (event) {
         // get all the input elements
-        let inputs = form.querySelectorAll("input, output");
+        let inputs = form.querySelectorAll('input, output');
 
         // call the action function, passing the form as this
         // and the inputs as the parameters
@@ -162,7 +162,7 @@ function init() {
 
   // call navigate, if it returns true then preflight
   if (navigate()) {
-    serverRequest("preflight", {});
+    serverRequest('preflight', {});
   }
 
 }
@@ -174,13 +174,13 @@ function init() {
  * cleared whenever the tab is closed.
  */
 function setTokens(json) {
-  if ("tokens" in json) {
+  if ('tokens' in json) {
     let tokens = [];
-    for (let key in json["tokens"]) {
-      sessionStorage.setItem(key, json["tokens"][key]);
+    for (let key in json['tokens']) {
+      sessionStorage.setItem(key, json['tokens'][key]);
       tokens.push(key);
     }
-    sessionStorage.setItem("tokens", tokens.join(","));
+    sessionStorage.setItem('tokens', tokens.join(','));
   }
 }
 
@@ -190,11 +190,11 @@ function setTokens(json) {
  * cleared whenever the tab is closed.
  */
 function getTokens() {
-  var keyString = sessionStorage.getItem("tokens");
+  var keyString = sessionStorage.getItem('tokens');
   var tokens = {};
 
   if (keyString) {
-    let tokenKeys = keyString.split(",");
+    let tokenKeys = keyString.split(',');
     for (let i = 0; i < tokenKeys.length; i++) {
       let key = tokenKeys[i];
       tokens[key] = sessionStorage.getItem(key);
@@ -221,7 +221,7 @@ function navigate() {
   }
 
   // clear any inputs
-  inputs = document.querySelectorAll("form");
+  inputs = document.querySelectorAll('form');
   for (let i = 0; i < inputs.length; i++) {
     inputs[i].reset();
   }
@@ -237,7 +237,7 @@ function navigate() {
 
   } else {
     // For now, just show the login page if no page is specified
-    showContent("login");
+    showContent('login');
   }
   return true;
 }
@@ -248,27 +248,27 @@ function navigate() {
  */
 function sites(page) {
   // get the select element
-  var select = document.querySelector("#" + page + " select[name=sitelist]");
+  var select = document.querySelector('#' + page + ' select[name=sitelist]');
   // bind a change handler (multiple binds for the same function are NOPs)
-  select.addEventListener("change", loadSiteWrapper);
+  select.addEventListener('change', loadSiteWrapper);
 
   // call the server to get the sites
-  serverRequest("sites", {}).then(function (result) {
+  serverRequest('sites', {}).then(function (result) {
     if (result.response.ok) {
       let sites = result.json.sites;
       // delete all but the first option
-      let options = select.querySelectorAll("option");
+      let options = select.querySelectorAll('option');
       for (let i = 1; i < options.length; i++) {
         select.removeChild(options[i]);
       }
       // populate the dropdown
       for (let i = 0; i < sites.length; i++) {
-        let option = document.createElement("option");
+        let option = document.createElement('option');
         option.textContent = sites[i];
         select.appendChild(option);
       }
     } else {
-      showContent("login");
+      showContent('login');
       serverStatus(result);
     }
   });
@@ -287,20 +287,20 @@ function loadSiteWrapper(event) {
 
   // get the form in the same page as this Select element
   var node = this;
-  while (node != null && !node.className.includes("content")) {
+  while (node != null && !node.className.includes('content')) {
     node = node.parentNode;
   }
   // we got the content div, now get the form
-  var form = node.querySelector("form"),
-    siteElement = form.querySelector("input[name=site], output[name=site]"),
-    userElement = form.querySelector("input[name=siteuser], output[name=siteuser]"),
-    passElement = form.querySelector("input[name=sitepasswd], output[name=sitepasswd]");
+  var form = node.querySelector('form'),
+    siteElement = form.querySelector('input[name=site], output[name=site]'),
+    userElement = form.querySelector('input[name=siteuser], output[name=siteuser]'),
+    passElement = form.querySelector('input[name=sitepasswd], output[name=sitepasswd]');
 
   // if add new was selected, clear the inputs
-  if (selected.value == "default") {
-    siteElement.value = "";
-    userElement.value = "";
-    passElement.value = "";
+  if (selected.value == 'default') {
+    siteElement.value = '';
+    userElement.value = '';
+    passElement.value = '';
     return false;
   }
 

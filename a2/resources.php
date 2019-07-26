@@ -32,7 +32,7 @@
  * will call when the user performs certain actions.
  * The functions are:
  *    - preflight -- This is a special function in that it is called both
- *                   as a separate "preflight" resource and it is also called
+ *                   as a separate 'preflight' resource and it is also called
  *                   before every other resource to perform any preflight
  *                   checks and insert any preflight response.  It is
  *                   especially important that preflight returns true if the
@@ -65,9 +65,9 @@
  * You should not worry about the database getting full of old entries, so
  * don't feel the need to delete expired or invalid entries at any point.
  *
- * The database connection is to the sqlite3 database "passwordsafe.db".
+ * The database connection is to the sqlite3 database 'passwordsafe.db'.
  * The commands to create this database (and therefore its schema) can
- * be found in "initdb.sql".  You should familiarize yourself with this
+ * be found in 'initdb.sql'.  You should familiarize yourself with this
  * schema.  Not every table or field must be used, but there are many
  * helpful hints contained therein.
  * The database can be accessed to run queries on it with the command:
@@ -100,7 +100,7 @@
  *
  * To get a date and time 15 minutes in the future (for the database):
  *      $now = new DateTime();
- *      $interval = new DateInterval("PT15M");
+ *      $interval = new DateInterval('PT15M');
  *      $now->add($interval)->format(DateTimeInterface::ISO8601);
  *
  * Notice that, like JavaScript, PHP is loosely typed.  A common paradigm in
@@ -121,7 +121,7 @@
 function preflight(&$request, &$response, &$db, &$pdo)
 {
   $is_new_sessionid_required = false;
-  $sessionid = $request->cookie("sessionid");
+  $sessionid = $request->cookie('sessionid');
 
   // Check if sessionid is in cookies
   if ($sessionid) {
@@ -130,12 +130,12 @@ function preflight(&$request, &$response, &$db, &$pdo)
     $web_session = $get_web_session_info_by_sessionid->fetch();
 
     // Check if sessionid exists in db and is not expired
-    if ($web_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $web_session["expires"])) {
-      $csrf_token = $request->token("csrf_token");
+    if ($web_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $web_session['expires'])) {
+      $csrf_token = $request->token('csrf_token');
 
       // Check if csrf_token exists and if it is valid, update expires
-      if ($csrf_token && $csrf_token === $web_session["metadata"]) {
-        $expires = new DateTime("+30 minutes");
+      if ($csrf_token && $csrf_token === $web_session['metadata']) {
+        $expires = new DateTime('+30 minutes');
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
         $db->update_web_session_info_by_sessionid->execute(array(
@@ -143,10 +143,10 @@ function preflight(&$request, &$response, &$db, &$pdo)
           'sessionid' => $sessionid
         ));
 
-        log_to_console("Updated web session!");
+        log_to_console('Updated web session!');
       } else {
         // This is possible CSRF, void session, reject request and log client IP
-        $expires = new DateTime("-30 minutes");
+        $expires = new DateTime('-30 minutes');
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
         $db->update_web_session_info_by_sessionid->execute(array(
@@ -154,10 +154,10 @@ function preflight(&$request, &$response, &$db, &$pdo)
           'sessionid' => $sessionid
         ));
 
-        $response->delete_cookie("sessionid");
+        $response->delete_cookie('sessionid');
         $response->set_http_code(403);
-        $response->failure("Request Failed");
-        log_to_console("Possible CSRF from " . $request->client_ip() . "!");
+        $response->failure('Request Failed');
+        log_to_console('Possible CSRF from ' . $request->client_ip() . '!');
 
         return false;
       }
@@ -171,7 +171,7 @@ function preflight(&$request, &$response, &$db, &$pdo)
   if ($is_new_sessionid_required) {
     // Create new sessionid and csrf_token
     $sessionid = trim(get_guid(), '{}');
-    $expires = new DateTime("+30 minutes");
+    $expires = new DateTime('+30 minutes');
     $expires = $expires->format(DateTimeInterface::ISO8601);
     $csrf_token = trim(get_guid(), '{}');
 
@@ -181,15 +181,15 @@ function preflight(&$request, &$response, &$db, &$pdo)
       'metadata' => $csrf_token
     ));
 
-    $response->add_cookie("sessionid", $sessionid);
-    $response->set_token("csrf_token", $csrf_token);
+    $response->add_cookie('sessionid', $sessionid);
+    $response->set_token('csrf_token', $csrf_token);
 
-    log_to_console("New web session created.");
+    log_to_console('New web session created.');
   }
 
   $response->set_http_code(200);
-  $response->success("Request OK");
-  log_to_console("OK");
+  $response->success('Request OK');
+  log_to_console('OK');
 
   return true;
 }
@@ -201,27 +201,27 @@ function preflight(&$request, &$response, &$db, &$pdo)
  */
 function signup(&$request, &$response, &$db, &$pdo)
 {
-  $username = $request->param("username"); // The requested username from the client
-  $password = $request->param("password"); // The requested password from the client
-  $email    = $request->param("email");    // The requested email address from the client
+  $username = $request->param('username'); // The requested username from the client
+  $password = $request->param('password'); // The requested password from the client
+  $email    = $request->param('email');    // The requested email address from the client
 
   // Check if params are valid
-  if (preg_match("/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/", $username) === 0) {
+  if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/', $username) === 0) {
     $response->set_http_code(400);
-    $response->failure("Username is invalid!");
-    log_to_console("Username is invalid!");
+    $response->failure('Username is invalid!');
+    log_to_console('Username is invalid!');
 
     return false;
-  } else if (preg_match("/^[A-Fa-f0-9]{64}$/", $password) === 0) {
+  } else if (preg_match('/^[A-Fa-f0-9]{64}$/', $password) === 0) {
     $response->set_http_code(400);
-    $response->failure("Password is invalid!");
-    log_to_console("Password is invalid!");
+    $response->failure('Password is invalid!');
+    log_to_console('Password is invalid!');
 
     return false;
   } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $response->set_http_code(400);
-    $response->failure("Email is invalid!");
-    log_to_console("Email is invalid!");
+    $response->failure('Email is invalid!');
+    log_to_console('Email is invalid!');
 
     return false;
   }
@@ -241,15 +241,15 @@ function signup(&$request, &$response, &$db, &$pdo)
 
   if (!$db->create_user_transaction($username, $password, $email, $modified, $salt, $db, $pdo)) {
     $response->set_http_code(400);
-    $response->failure("Failed to create account.");
+    $response->failure('Failed to create account.');
 
     return false;
   }
 
   // Respond with a message of success.
   $response->set_http_code(201); // Created
-  $response->success("Account created.");
-  log_to_console("Account created.");
+  $response->success('Account created.');
+  log_to_console('Account created.');
 
   return true;
 }
@@ -262,7 +262,7 @@ function signup(&$request, &$response, &$db, &$pdo)
  */
 function identify(&$request, &$response, &$db, &$pdo)
 {
-  $username = $request->param("username"); // The username
+  $username = $request->param('username'); // The username
   $username = strtolower($username);
 
   $get_login_info_by_username = $db->get_login_info_by_username;
@@ -272,16 +272,16 @@ function identify(&$request, &$response, &$db, &$pdo)
   // Check if user exists
   if ($user) {
     // Check if user is valid
-    if ($user["valid"] === "1") {
+    if ($user['valid'] === '1') {
       // Check if challenge exists and is not expired
-      $challenge = $user["challenge"];
+      $challenge = $user['challenge'];
 
-      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user["expires"])) {
-        log_to_console("Used existing challenge!");
+      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user['expires'])) {
+        log_to_console('Used existing challenge!');
       } else {
         // Generate new challenge, update expires
         $challenge = md5(uniqid(rand())) . md5(uniqid(rand()));
-        $expires = new DateTime("+2 minutes");
+        $expires = new DateTime('+2 minutes');
         $expires = $expires->format(DateTimeInterface::ISO8601);
 
         $db->update_login_info_by_username->execute(array(
@@ -290,31 +290,31 @@ function identify(&$request, &$response, &$db, &$pdo)
           'username' => $username
         ));
 
-        log_to_console("Updated challenge!");
+        log_to_console('Updated challenge!');
       }
 
-      $salt = $user["salt"];
+      $salt = $user['salt'];
       // Set data
-      $response->set_data("salt", $salt);
-      $response->set_data("challenge", $challenge);
+      $response->set_data('salt', $salt);
+      $response->set_data('challenge', $challenge);
     } else {
       $response->set_http_code(400);
-      $response->failure("Failed to identify user.");
-      log_to_console("User is not valid.");
+      $response->failure('Failed to identify user.');
+      log_to_console('User is not valid.');
 
       return false;
     }
   } else {
     $response->set_http_code(400);
-    $response->failure("Failed to identify user.");
-    log_to_console("User does not exist.");
+    $response->failure('Failed to identify user.');
+    log_to_console('User does not exist.');
 
     return false;
   }
 
   $response->set_http_code(200);
-  $response->success("Successfully identified user.");
-  log_to_console("Success.");
+  $response->success('Successfully identified user.');
+  log_to_console('Success.');
 
   return true;
 }
@@ -326,8 +326,8 @@ function identify(&$request, &$response, &$db, &$pdo)
  */
 function login(&$request, &$response, &$db, &$pdo)
 {
-  $username = $request->param("username"); // The username with which to log in
-  $password = $request->param("password"); // The password with which to log in
+  $username = $request->param('username'); // The username with which to log in
+  $password = $request->param('password'); // The password with which to log in
   $username = strtolower($username);
   $password = strtolower($password);
 
@@ -338,17 +338,17 @@ function login(&$request, &$response, &$db, &$pdo)
   // Check if user exists
   if ($user) {
     // Check if user is valid
-    if ($user["valid"] === "1") {
+    if ($user['valid'] === '1') {
       // Check if challenge exists and is not expired
-      $challenge = $user["challenge"];
+      $challenge = $user['challenge'];
 
-      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user["expires"])) {
-        $password_challenge = hash('sha256', $user["passwd"] . $challenge);
+      if ($challenge && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user['expires'])) {
+        $password_challenge = hash('sha256', $user['passwd'] . $challenge);
 
         // Check if password is correct
         if ($password === $password_challenge) {
-          $sessionid = $request->cookie("sessionid");
-          $expires = new DateTime("+5 minutes");
+          $sessionid = $request->cookie('sessionid');
+          $expires = new DateTime('+5 minutes');
           $expires = $expires->format(DateTimeInterface::ISO8601);
           $csrf_token = trim(get_guid(), '{}');
 
@@ -357,7 +357,7 @@ function login(&$request, &$response, &$db, &$pdo)
             'sessionid' => $sessionid,
           ));
 
-          $response->set_token("csrf_token", $csrf_token);
+          $response->set_token('csrf_token', $csrf_token);
 
           $db->create_or_update_user_session_info->execute(array(
             'sessionid' => $sessionid,
@@ -366,36 +366,36 @@ function login(&$request, &$response, &$db, &$pdo)
           ));
         } else {
           $response->set_http_code(400);
-          $response->failure("Failed to log in.");
-          log_to_console("Password is incorrect.");
+          $response->failure('Failed to log in.');
+          log_to_console('Password is incorrect.');
 
           return false;
         }
       } else {
         $response->set_http_code(400);
-        $response->failure("Failed to log in.");
-        log_to_console("Challenge is expired.");
+        $response->failure('Failed to log in.');
+        log_to_console('Challenge is expired.');
 
         return false;
       }
     } else {
       $response->set_http_code(400);
-      $response->failure("Failed to log in.");
-      log_to_console("User is not valid.");
+      $response->failure('Failed to log in.');
+      log_to_console('User is not valid.');
 
       return false;
     }
   } else {
     $response->set_http_code(400);
-    $response->failure("Failed to log in.");
-    log_to_console("User does not exist.");
+    $response->failure('Failed to log in.');
+    log_to_console('User does not exist.');
 
     return false;
   }
 
   $response->set_http_code(200); // OK
-  $response->success("Successfully logged in.");
-  log_to_console("User session created.");
+  $response->success('Successfully logged in.');
+  log_to_console('User session created.');
 
   return true;
 }
@@ -415,15 +415,15 @@ function sites(&$request, &$response, &$db, &$pdo)
     $sites_data = $get_sites_data_by_username->fetchAll();
 
     $get_site_attribute = function ($site_data) {
-      return $site_data["site"];
+      return $site_data['site'];
     };
 
     $sites = array_map($get_site_attribute, $sites_data);
 
-    $response->set_data("sites", $sites);
+    $response->set_data('sites', $sites);
     $response->set_http_code(200);
-    $response->success("Sites with recorded passwords.");
-    log_to_console("Found and returned sites");
+    $response->success('Sites with recorded passwords.');
+    log_to_console('Found and returned sites');
 
     return true;
   }
@@ -439,10 +439,10 @@ function save(&$request, &$response, &$db, &$pdo)
   $username = get_authenticated_user($request, $response, $db);
 
   if ($username) {
-    $site       = trim($request->param("site"));
-    $siteuser   = trim($request->param("siteuser"));
-    $sitepasswd = trim($request->param("sitepasswd"));
-    $siteiv     = trim($request->param("siteiv"));
+    $site       = trim($request->param('site'));
+    $siteuser   = trim($request->param('siteuser'));
+    $sitepasswd = trim($request->param('sitepasswd'));
+    $siteiv     = trim($request->param('siteiv'));
 
     $modified = new DateTime();
     $modified = $modified->format(DateTimeInterface::ISO8601);
@@ -457,8 +457,8 @@ function save(&$request, &$response, &$db, &$pdo)
     ));
 
     $response->set_http_code(200);
-    $response->success("Save to safe succeeded.");
-    log_to_console("Successfully saved site data");
+    $response->success('Save to safe succeeded.');
+    log_to_console('Successfully saved site data');
 
     return true;
   }
@@ -474,7 +474,7 @@ function load(&$request, &$response, &$db, &$pdo)
   $username = get_authenticated_user($request, $response, $db);
 
   if ($username) {
-    $site = trim($request->param("site"));
+    $site = trim($request->param('site'));
 
     $get_site_data_by_username_and_site = $db->get_site_data_by_username_and_site;
     $get_site_data_by_username_and_site->execute(array(
@@ -485,21 +485,21 @@ function load(&$request, &$response, &$db, &$pdo)
     $site_data = $get_site_data_by_username_and_site->fetch();
 
     if ($site_data) {
-      $response->set_data("site", $site_data["site"]);
-      $response->set_data("siteuser", $site_data["siteuser"]);
-      $response->set_data("sitepasswd", $site_data["sitepasswd"]);
-      $response->set_data("siteiv", $site_data["siteiv"]);
+      $response->set_data('site', $site_data['site']);
+      $response->set_data('siteuser', $site_data['siteuser']);
+      $response->set_data('sitepasswd', $site_data['sitepasswd']);
+      $response->set_data('siteiv', $site_data['siteiv']);
     } else {
       $response->set_http_code(404);
-      $response->failure("Site does not exist.");
-      log_to_console("Site does not exist.");
+      $response->failure('Site does not exist.');
+      log_to_console('Site does not exist.');
 
       return false;
     }
 
     $response->set_http_code(200);
-    $response->success("Site data retrieved.");
-    log_to_console("Successfully retrieved site data");
+    $response->success('Site data retrieved.');
+    log_to_console('Successfully retrieved site data');
 
     return true;
   }
@@ -512,8 +512,8 @@ function load(&$request, &$response, &$db, &$pdo)
 function logout(&$request, &$response, &$db, &$pdo)
 {
   $response->set_http_code(200);
-  $response->success("Successfully logged out.");
-  log_to_console("Logged out");
+  $response->success('Successfully logged out.');
+  log_to_console('Logged out');
 
   return true;
 }
@@ -522,27 +522,27 @@ function logout(&$request, &$response, &$db, &$pdo)
 function get_guid()
 {
   $charid = strtoupper(md5(uniqid(rand(), true)));
-  $hyphen = chr(45); // "-"
-  $uuid = chr(123) // "{"
+  $hyphen = chr(45); // '-'
+  $uuid = chr(123) // '{'
     . substr($charid, 0, 8) . $hyphen
     . substr($charid, 8, 4) . $hyphen
     . substr($charid, 12, 4) . $hyphen
     . substr($charid, 16, 4) . $hyphen
     . substr($charid, 20, 12)
-    . chr(125); // "}"
+    . chr(125); // '}'
   return $uuid;
 }
 
 function get_authenticated_user(&$request, &$response, &$db)
 {
-  $sessionid = $request->cookie("sessionid");
+  $sessionid = $request->cookie('sessionid');
   $get_user_session_info_by_sessionid = $db->get_user_session_info_by_sessionid;
   $get_user_session_info_by_sessionid->execute(array('sessionid' => $sessionid));
   $user_session = $get_user_session_info_by_sessionid->fetch();
 
-  if ($user_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user_session["expires"])) {
-    $username = $user_session["username"];
-    $expires = new DateTime("+5 minutes");
+  if ($user_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user_session['expires'])) {
+    $username = $user_session['username'];
+    $expires = new DateTime('+5 minutes');
     $expires = $expires->format(DateTimeInterface::ISO8601);
 
     $db->create_or_update_user_session_info->execute(array(
@@ -554,8 +554,8 @@ function get_authenticated_user(&$request, &$response, &$db)
     return $username;
   } else {
     $response->set_http_code(401);
-    $response->failure("Please log in first.");
-    log_to_console("Unauthorized access!");
+    $response->failure('Please log in first.');
+    log_to_console('Unauthorized access!');
 
     return false;
   }

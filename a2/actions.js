@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /*****************************************************************************
  * This is the JavaScript file that students need to modify to implement the
@@ -14,7 +14,7 @@
  *
  * Most of the functions in this file handle a form submission.  These
  * are passed as arguments the input/output DOM elements of the form that was
- * submitted.  The "this" keyword for these functions is the form element
+ * submitted.  The 'this' keyword for these functions is the form element
  * itself.  The functions that handle form submissions are:
  *   - login
  *   - signup
@@ -92,8 +92,8 @@ async function credentials(username) {
   var idResult;
 
   // get any information needed to log in
-  idResult = await serverRequest("identify", {
-    "username": username
+  idResult = await serverRequest('identify', {
+    'username': username
   });
   // bail if something went wrong
   if (!idResult.response.ok) {
@@ -124,9 +124,9 @@ async function login(userInput, passInput) {
   hashedPassword = await hashMessage(hashedPassword + idJson['challenge']);
 
   // Send a login request to the server.
-  const result = await serverRequest("login", {
-    "username": username,
-    "password": hashedPassword
+  const result = await serverRequest('login', {
+    'username': username,
+    'password': hashedPassword
   });
 
   // If the login was successful, show the dashboard.
@@ -136,7 +136,7 @@ async function login(userInput, passInput) {
     sessionStorage.setItem('encryption_key', encryptionKey);
     clearInputs();
 
-    showContent("dashboard");
+    showContent('dashboard');
   } else {
     // If the login failed, show the login page with an error message.
     serverStatus(result);
@@ -158,16 +158,16 @@ async function signup(userInput, passInput, passInput2, emailInput) {
   password = await hashMessage(username + password);
 
   // send the signup form to the server
-  const result = await serverRequest("signup", {
-    "username": username,
-    "password": password,
-    "email": email
+  const result = await serverRequest('signup', {
+    'username': username,
+    'password': password,
+    'email': email
   });
 
   if (result.response.ok) {
     clearInputs();
     // go to the login page
-    showContent("login");
+    showContent('login');
   }
   // show the status message from the server
   serverStatus(result);
@@ -190,11 +190,11 @@ async function save(siteInput, userInput, passInput) {
   } = await encryptMessage(sitepasswd, key);
 
   // send the data, along with the encrypted password, to the server
-  const result = await serverRequest("save", {
-    "site": site,
-    "siteuser": siteuser,
-    "sitepasswd": encryptedMessage,
-    "siteiv": iv
+  const result = await serverRequest('save', {
+    'site': site,
+    'siteuser': siteuser,
+    'sitepasswd': encryptedMessage,
+    'siteiv': iv
   });
 
   if (result.response.ok) {
@@ -202,7 +202,7 @@ async function save(siteInput, userInput, passInput) {
     clearInputs();
 
     // update the sites list
-    sites("save");
+    sites('save');
   }
   // show any server status messages
   serverStatus(result);
@@ -217,8 +217,8 @@ async function save(siteInput, userInput, passInput) {
  */
 async function loadSite(siteName, siteElement, userElement, passElement) {
   const isDecryptionRequired = passElement.tagName === 'INPUT';
-  const result = await serverRequest("load", {
-    "site": siteName
+  const result = await serverRequest('load', {
+    'site': siteName
   });
 
   if (result.response.ok) {
@@ -238,7 +238,7 @@ async function loadSite(siteName, siteElement, userElement, passElement) {
     }
   } else {
     // on failure, show the login page and display any server status
-    showContent("login");
+    showContent('login');
     serverStatus(result);
   }
 }
@@ -264,7 +264,7 @@ async function load(siteInput, userInput, passInput) {
  * Called when the logout link is clicked.
  */
 async function logout() {
-  const result = await serverRequest("logout", {});
+  const result = await serverRequest('logout', {});
 
   if (result.response.ok) {
     sessionStorage.removeItem('encryption_key');
@@ -272,7 +272,7 @@ async function logout() {
 
     clearInputs();
 
-    showContent("login");
+    showContent('login');
   }
 
   serverStatus(result);
@@ -282,15 +282,15 @@ async function logout() {
  * Called when the value in password2 is changed.
  */
 function validatePasswordsMatching() {
-  const password = document.querySelector("#signup form .field input[name=password]");
-  const password2 = document.querySelector("#signup form .field input[name=password2]");
+  const password = document.querySelector('#signup form .field input[name=password]');
+  const password2 = document.querySelector('#signup form .field input[name=password2]');
 
-  if (password2.value === "") {
-    password2.setCustomValidity("Please confirm password!");
+  if (password2.value === '') {
+    password2.setCustomValidity('Please confirm password!');
   } else if (password.value !== password2.value) {
-    password2.setCustomValidity("Passwords do not match!");
+    password2.setCustomValidity('Passwords do not match!');
   } else {
-    password2.setCustomValidity("");
+    password2.setCustomValidity('');
   }
 }
 
@@ -298,15 +298,15 @@ function validatePasswordsMatching() {
  * Called when the value in email is changed.
  */
 function validateEmail() {
-  const email = document.querySelector("#signup form .field input[name=email]");
-  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+  const email = document.querySelector('#signup form .field input[name=email]');
+  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@']+(\.[^<>()\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
 
-  if (email.value === "") {
-    email.setCustomValidity("Please enter email!");
+  if (email.value === '') {
+    email.setCustomValidity('Please enter email!');
   } else if (!emailRegex.test(email.value)) {
-    email.setCustomValidity("Must be a valid email address!");
+    email.setCustomValidity('Must be a valid email address!');
   } else {
-    email.setCustomValidity("");
+    email.setCustomValidity('');
   }
 }
 
@@ -314,46 +314,46 @@ function validateEmail() {
  * Called when the sign up submit button is clicked.
  */
 function validateSignupInfo() {
-  const username = document.querySelector("#signup form .field input[name=username]");
-  const password = document.querySelector("#signup form .field input[name=password]");
-  const password2 = document.querySelector("#signup form .field input[name=password2]");
-  const email = document.querySelector("#signup form .field input[name=email]");
+  const username = document.querySelector('#signup form .field input[name=username]');
+  const password = document.querySelector('#signup form .field input[name=password]');
+  const password2 = document.querySelector('#signup form .field input[name=password2]');
+  const email = document.querySelector('#signup form .field input[name=email]');
   const usernameRegex = new RegExp(/^[a-zA-Z0-9][a-zA-Z0-9-_]{2,20}$/);
   const passwordRegex = new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,16}/);
-  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+  const emailRegex = new RegExp(/^(([^<>()\[\]\\.,;:\s@']+(\.[^<>()\[\]\\.,;:\s@']+)*)|('.+'))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
 
   if (!usernameRegex.test(username.value)) {
-    console.log("Username is invalid! You can use letters, numbers, - and _. Must start with a letter or a number, and at least 3 and at most 20 characters.");
+    console.log('Username is invalid! You can use letters, numbers, - and _. Must start with a letter or a number, and at least 3 and at most 20 characters.');
 
     return false;
   }
 
   if (!passwordRegex.test(password.value)) {
-    console.log("Password is invalid! Must contain at least one number, one uppercase and one lowercase letter, and at least 6 and at most 16 characters.");
+    console.log('Password is invalid! Must contain at least one number, one uppercase and one lowercase letter, and at least 6 and at most 16 characters.');
 
     return false;
   }
 
-  if (password2.value === "") {
-    console.log("Please confirm password!");
+  if (password2.value === '') {
+    console.log('Please confirm password!');
 
     return false;
   }
 
   if (password.value !== password2.value) {
-    console.log("Passwords do not match!");
+    console.log('Passwords do not match!');
 
     return false;
   }
 
-  if (email.value === "") {
-    console.log("Please enter email!");
+  if (email.value === '') {
+    console.log('Please enter email!');
 
     return false;
   }
 
   if (!emailRegex.test(email.value)) {
-    console.log("Must be a valid email address!");
+    console.log('Must be a valid email address!');
 
     return false;
   }
