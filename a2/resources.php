@@ -471,15 +471,38 @@ function save(&$request, &$response, &$db, &$pdo)
  */
 function load(&$request, &$response, &$db, &$pdo)
 {
-  $site = $request->param("site");
+  $username = get_authenticated_user($request, $response, $db);
 
-  $response->set_data("site", $site);
+  if ($username) {
+    $site = trim($request->param("site"));
 
-  $response->set_http_code(200); // OK
-  $response->success("Site data retrieved.");
-  log_to_console("Successfully retrieved site data");
+    $get_site_data_by_username_and_site = $db->get_site_data_by_username_and_site;
+    $get_site_data_by_username_and_site->execute(array(
+      'username' => $username,
+      'site' => $site
+    ));
 
-  return true;
+    $site_data = $get_site_data_by_username_and_site->fetch();
+
+    if ($site_data) {
+      $response->set_data("site", $site_data["site"]);
+      $response->set_data("siteuser", $site_data["siteuser"]);
+      $response->set_data("sitepasswd", $site_data["sitepasswd"]);
+      $response->set_data("siteiv", $site_data["siteiv"]);
+    } else {
+      $response->set_http_code(400);
+      $response->failure("Failed to load site data.");
+      log_to_console("Site does not exist.");
+
+      return false;
+    }
+
+    $response->set_http_code(200);
+    $response->success("Site data retrieved.");
+    log_to_console("Successfully retrieved site data");
+
+    return true;
+  }
 }
 
 /**

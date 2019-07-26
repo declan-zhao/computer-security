@@ -108,6 +108,9 @@ $db->get_sites_data_by_username = $pdo->prepare("SELECT site FROM user_safe WHER
 // save
 $db->create_or_update_site_data = $pdo->prepare("INSERT INTO user_safe (username, site, siteuser, sitepasswd, siteiv, modified) VALUES (:username, :site, :siteuser, :sitepasswd, :siteiv, :modified) ON CONFLICT (username, site) DO UPDATE SET siteuser = :siteuser, sitepasswd = :sitepasswd, siteiv = :siteiv, modified = :modified");
 
+// load
+$db->get_site_data_by_username_and_site = $pdo->prepare("SELECT * FROM user_safe WHERE username = :username AND site = :site");
+
 $request = new Request($decoded_post_body);
 $response = null;
 
