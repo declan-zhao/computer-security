@@ -551,6 +551,8 @@ function get_authenticated_user(&$request, &$response, &$db)
       'expires' => $expires
     ));
 
+    log_to_console('Updated user session!');
+
     return $username;
   } else {
     $response->set_http_code(401);
