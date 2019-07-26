@@ -215,23 +215,32 @@ async function save(siteInput, userInput, passInput) {
  * this file, siteName is a string (the site to load) and not
  * a form element.
  */
-function loadSite(siteName, siteElement, userElement, passElement) {
-  // do any preprocessing here
-
-  serverRequest("load", // the resource to call
-    {
-      "site": siteName
-    } // populate with any parameters the server needs
-  ).then(function (result) {
-    if (result.response.ok) {
-      // do any work that needs to be done on success
-
-    } else {
-      // on failure, show the login page and display any server status
-      showContent("login");
-      serverStatus(result);
-    }
+async function loadSite(siteName, siteElement, userElement, passElement) {
+  const isDecryptionRequired = passElement.tagName === 'INPUT';
+  const result = await serverRequest("load", {
+    "site": siteName
   });
+
+  if (result.response.ok) {
+    siteElement.value = result.json['site'];
+    userElement.value = result.json['siteuser'];
+
+    if (isDecryptionRequired) {
+      const rawKey = sessionStorage.getItem('encryption_key');
+      const key = await importKey(rawKey);
+      const decryptedMessage = await decryptMessage(result.json['sitepasswd'], result.json['siteiv'], key);
+
+      passElement.value = decryptedMessage;
+    } else {
+      passElement.value = result.json['sitepasswd'];
+
+      sessionStorage.setItem('hexiv', result.json['siteiv']);
+    }
+  } else {
+    // on failure, show the login page and display any server status
+    showContent("login");
+    serverStatus(result);
+  }
 }
 
 /**
@@ -358,6 +367,17 @@ async function encryptMessage(message, key) {
     encryptedMessage: bufferToHexString(encryptedData),
     iv: bufferToHexString(iv)
   };
+}
+
+async function decryptMessage(encryptedMessage, hexiv, key) {
+  const data = hexStringToUint8Array(encryptedMessage);
+  const iv = hexStringToUint8Array(hexiv);
+  const decryptedData = await window.crypto.subtle.decrypt({
+    name: 'AES-GCM',
+    iv: iv
+  }, key, data);
+
+  return bufferToUtf8(decryptedData);
 }
 
 async function importKey(rawKey) {
