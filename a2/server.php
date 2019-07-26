@@ -111,6 +111,9 @@ $db->create_or_update_site_data = $pdo->prepare('INSERT INTO user_safe (username
 // load
 $db->get_site_data_by_username_and_site = $pdo->prepare('SELECT * FROM user_safe WHERE username = :username AND site = :site');
 
+// logout
+$db->delete_user_session_info_by_sessionid = $pdo->prepare('DELETE FROM user_session WHERE sessionid = :sessionid');
+
 $request = new Request($decoded_post_body);
 $response = null;
 

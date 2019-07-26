@@ -510,9 +510,24 @@ function load(&$request, &$response, &$db, &$pdo)
  */
 function logout(&$request, &$response, &$db, &$pdo)
 {
+  $sessionid = $request->cookie('sessionid');
+  $get_user_session_info_by_sessionid = $db->get_user_session_info_by_sessionid;
+  $get_user_session_info_by_sessionid->execute(array('sessionid' => $sessionid));
+  $user_session = $get_user_session_info_by_sessionid->fetch();
+
+  if ($user_session && new DateTime() < date_create_from_format(DateTimeInterface::ISO8601, $user_session['expires'])) {
+    $db->delete_user_session_info_by_sessionid->execute(array(
+      'sessionid' => $sessionid
+    ));
+
+    $response->success('Successfully logged out.');
+    log_to_console('Logged out');
+  } else {
+    $response->success('Please log in first.');
+    log_to_console('User has not logged in yet.');
+  }
+
   $response->set_http_code(200);
-  $response->success('Successfully logged out.');
-  log_to_console('Logged out');
 
   return true;
 }
