@@ -134,6 +134,7 @@ async function login(userInput, passInput) {
     const encryptionKey = await hashMessage(password);
 
     sessionStorage.setItem('encryption_key', encryptionKey);
+    clearInputs();
 
     showContent("dashboard");
   } else {
@@ -164,6 +165,7 @@ async function signup(userInput, passInput, passInput2, emailInput) {
   });
 
   if (result.response.ok) {
+    clearInputs();
     // go to the login page
     showContent("login");
   }
@@ -197,9 +199,7 @@ async function save(siteInput, userInput, passInput) {
 
   if (result.response.ok) {
     // any work after a successful save should be done here
-    siteInput.value = '';
-    userInput.value = '';
-    passInput.value = '';
+    clearInputs();
 
     // update the sites list
     sites("save");
@@ -269,6 +269,8 @@ async function logout() {
   if (result.response.ok) {
     sessionStorage.removeItem('encryption_key');
     sessionStorage.removeItem('hexiv');
+
+    clearInputs();
 
     showContent("login");
   }
@@ -357,6 +359,12 @@ function validateSignupInfo() {
   }
 
   return true;
+}
+
+function clearInputs() {
+  const inputs = document.querySelectorAll('input');
+
+  inputs.forEach(input => input.value = '');
 }
 
 async function hashMessage(message) {
