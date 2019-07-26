@@ -246,8 +246,18 @@ async function loadSite(siteName, siteElement, userElement, passElement) {
 /**
  * Called when the decrypt password button is pressed.
  */
-function load(siteInput, userInput, passInput) {
-  // you will need to entirely populate this function
+async function load(siteInput, userInput, passInput) {
+  const hexiv = sessionStorage.getItem('hexiv');
+
+  if (passInput.value !== '' && hexiv !== null) {
+    const rawKey = sessionStorage.getItem('encryption_key');
+    const key = await importKey(rawKey);
+    const decryptedMessage = await decryptMessage(passInput.value, hexiv, key);
+
+    passInput.value = decryptedMessage;
+
+    sessionStorage.removeItem('hexiv');
+  }
 }
 
 /**
