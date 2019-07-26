@@ -263,16 +263,17 @@ async function load(siteInput, userInput, passInput) {
 /**
  * Called when the logout link is clicked.
  */
-function logout() {
-  // do any preprocessing needed
+async function logout() {
+  const result = await serverRequest("logout", {});
 
-  // tell the server to log out
-  serverRequest("logout", {}).then(function (result) {
-    if (result.response.ok) {
-      showContent("login");
-    }
-    serverStatus(result);
-  });
+  if (result.response.ok) {
+    sessionStorage.removeItem('encryption_key');
+    sessionStorage.removeItem('hexiv');
+
+    showContent("login");
+  }
+
+  serverStatus(result);
 }
 
 /**
