@@ -189,7 +189,6 @@ function preflight(&$request, &$response, &$db, &$pdo)
 
   $response->set_http_code(200);
   $response->success('Request OK');
-  log_to_console('OK');
 
   return true;
 }
