@@ -490,8 +490,8 @@ function load(&$request, &$response, &$db, &$pdo)
       $response->set_data("sitepasswd", $site_data["sitepasswd"]);
       $response->set_data("siteiv", $site_data["siteiv"]);
     } else {
-      $response->set_http_code(400);
-      $response->failure("Failed to load site data.");
+      $response->set_http_code(404);
+      $response->failure("Site does not exist.");
       log_to_console("Site does not exist.");
 
       return false;
