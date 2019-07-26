@@ -443,17 +443,25 @@ function save(&$request, &$response, &$db, &$pdo)
     $sitepasswd = trim($request->param('sitepasswd'));
     $siteiv     = trim($request->param('siteiv'));
 
-    $modified = new DateTime();
-    $modified = $modified->format(DateTimeInterface::ISO8601);
+    if ($site !== '' && $sitepasswd !== '' && $siteiv !== '') {
+      $modified = new DateTime();
+      $modified = $modified->format(DateTimeInterface::ISO8601);
 
-    $db->create_or_update_site_data->execute(array(
-      'username' => $username,
-      'site' => $site,
-      'siteuser' => $siteuser,
-      'sitepasswd' => $sitepasswd,
-      'siteiv' => $siteiv,
-      'modified' => $modified
-    ));
+      $db->create_or_update_site_data->execute(array(
+        'username' => $username,
+        'site' => $site,
+        'siteuser' => $siteuser,
+        'sitepasswd' => $sitepasswd,
+        'siteiv' => $siteiv,
+        'modified' => $modified
+      ));
+    } else {
+      $response->set_http_code(400);
+      $response->failure('Failed to save invalid site data to safe.');
+      log_to_console('Failed to save invalid site data');
+
+      return false;
+    }
 
     $response->set_http_code(200);
     $response->success('Save to safe succeeded.');
