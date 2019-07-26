@@ -175,29 +175,37 @@ async function signup(userInput, passInput, passInput2, emailInput) {
 /**
  * Called when the add password form is submitted.
  */
-function save(siteInput, userInput, passInput) {
+async function save(siteInput, userInput, passInput) {
   var site = siteInput.value,
     siteuser = userInput.value,
-    sitepasswd = passInput.value,
-    encrypted; // this will need to be populated
+    sitepasswd = passInput.value;
+
+  const rawKey = sessionStorage.getItem('encryption_key');
+  const key = await importKey(rawKey);
+  const {
+    encryptedMessage,
+    iv
+  } = await encryptMessage(sitepasswd, key);
 
   // send the data, along with the encrypted password, to the server
-  serverRequest("save", // the resource to call
-    {
-      "site": site,
-      "siteuser": siteuser,
-      "sitepasswd": encrypted
-    } // this should be populated with any parameters the server needs
-  ).then(function (result) {
-    if (result.response.ok) {
-      // any work after a successful save should be done here
-
-      // update the sites list
-      sites("save");
-    }
-    // show any server status messages
-    serverStatus(result);
+  const result = await serverRequest("save", {
+    "site": site,
+    "siteuser": siteuser,
+    "sitepasswd": encryptedMessage,
+    "siteiv": iv
   });
+
+  if (result.response.ok) {
+    // any work after a successful save should be done here
+    siteInput.value = '';
+    userInput.value = '';
+    passInput.value = '';
+
+    // update the sites list
+    sites("save");
+  }
+  // show any server status messages
+  serverStatus(result);
 }
 
 /**
@@ -336,4 +344,25 @@ async function hashMessage(message) {
   const digestValue = await window.crypto.subtle.digest('SHA-256', data);
 
   return bufferToHexString(digestValue);
+}
+
+async function encryptMessage(message, key) {
+  const data = utf8ToUint8Array(message);
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encryptedData = await window.crypto.subtle.encrypt({
+    name: 'AES-GCM',
+    iv: iv
+  }, key, data);
+
+  return {
+    encryptedMessage: bufferToHexString(encryptedData),
+    iv: bufferToHexString(iv)
+  };
+}
+
+async function importKey(rawKey) {
+  const rawKeyBuffer = hexStringToUint8Array(rawKey);
+  const key = await window.crypto.subtle.importKey('raw', rawKeyBuffer, 'AES-GCM', false, ['encrypt', 'decrypt']);
+
+  return key;
 }
